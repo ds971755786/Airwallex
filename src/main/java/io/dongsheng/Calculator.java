@@ -1,5 +1,6 @@
 package io.dongsheng;
 
+import java.util.Deque;
 import java.util.Scanner;
 
 public class Calculator {
@@ -26,13 +27,7 @@ public class Calculator {
                         System.out.println(e.getMessage());
                     }
                 }
-
-                StringBuffer sb = new StringBuffer();
-                sb.append("stack:");
-                for(Object d : rpn.getStack().toArray()) {
-                    sb.append(" ").append(d);
-                }
-                System.out.println(sb.toString());
+                printStack(rpn.getStack());
 
             } catch (NumberFormatException e) {
                 System.out.println("neither a supported operator nor a number");
@@ -40,6 +35,15 @@ public class Calculator {
         }
 
 
+    }
+
+    public static void printStack(Deque<Double> stack) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("stack:");
+        for(Object d : stack.toArray()) {
+            sb.append(" ").append(d);
+        }
+        System.out.println(sb.toString());
     }
 
 

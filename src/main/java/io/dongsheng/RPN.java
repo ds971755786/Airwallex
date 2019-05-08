@@ -2,20 +2,25 @@ package io.dongsheng;
 
 import java.util.*;
 
-import static io.dongsheng.Operator.*;
 
 public class RPN {
-    private List<NumberOrOperator> inputs = new ArrayList<NumberOrOperator>();
-    private Deque<Double> stack = new ArrayDeque<Double>();
-    private int count = 0;
+    private List<NumberOrOperator> inputs = new ArrayList<>();
+    private Deque<Double> stack = new ArrayDeque<>();
     private boolean insufficientParamters = false;
+    private Add add = new Add();
+    private Subtract subtract = new Subtract();
+    private Multiply multiply = new Multiply();
+    private Divide divide = new Divide();
+    private Clear clear = new Clear();
+    private Sqrt sqrt = new Sqrt();
+    private Undo undo = new Undo();
 
     public void calUnary(Operator operator) {
-        if (stack.size() < 1) {
-            insufficientParamters = true;
-            throw new InsufficientParametersExecption("insufficient paramters");
+        if (this.stack.size() < 1) {
+            this.insufficientParamters = true;
+            throw new InsufficientParametersExecption("insufficient parameters");
         }
-        Double n = stack.removeLast();
+        Double n = this.stack.removeLast();
         Double result;
         switch (operator) {
             case sqrt:
@@ -24,13 +29,13 @@ public class RPN {
             default:
                 throw new RuntimeException("unsupported operator");
         }
-        stack.addLast(result);
+        this.stack.addLast(result);
     }
 
     public void calBinary(Operator operator) {
-        if (stack.size() < 2) {
-            insufficientParamters = true;
-            throw new InsufficientParametersExecption("insufficient paramters");
+        if (this.stack.size() < 2) {
+            this.insufficientParamters = true;
+            throw new InsufficientParametersExecption("insufficient parameters");
         }
         Double n2 = stack.removeLast();
         Double n1 = stack.removeLast();
@@ -56,78 +61,28 @@ public class RPN {
 
 
     public void add(NumberOrOperator numberOrOperator) {
-        if (!undo.equals(numberOrOperator.getOperator()) && insufficientParamters) {
+        if (!numberOrOperator.isUndo() && this.insufficientParamters) {
             throw new InsufficientParametersExecption("not take new inputs before the last operator is removed");
         }
-        inputs.add(numberOrOperator);
-        count++;
+        this.inputs.add(numberOrOperator);
         updateStack(numberOrOperator);
 
     }
 
     public void updateStack(NumberOrOperator numberOrOperator) {
         if (numberOrOperator.isNumber()) {
-            stack.addLast(numberOrOperator.getValue());
+            this.stack.addLast(numberOrOperator.getValue());
         } else {
-            switch (numberOrOperator.getOperator()) {
-                case add:
-                    calBinary(numberOrOperator.getOperator());
-                    break;
-                case subtract:
-                    calBinary(numberOrOperator.getOperator());
-                    break;
-                case multiply:
-                    calBinary(numberOrOperator.getOperator());
-                    break;
-                case divide:
-                    calBinary(numberOrOperator.getOperator());
-                    break;
-                case sqrt:
-                    calUnary(numberOrOperator.getOperator());
-                    break;
-                case clear:
-                    stack = new ArrayDeque<>();
-                    inputs = new ArrayList<>();
-                    count = 0;
-                    break;
-                case undo:
-                    //
-                    if (insufficientParamters) {
-                        insufficientParamters = false;
-                        int last = inputs.size() - 1;
-                        inputs.remove(last);
-                        inputs.remove(last - 1);
-                    } else {
-                        int undoIndex = inputs.size() - 1;
-                        int beforeUndo = undoIndex - 1;
-                        if (beforeUndo < 0) {
-                            //nothing in the stack
-                            return;
-                        } else {
-                            NumberOrOperator numberOrOperatorBeforeUndo = inputs.get(beforeUndo);
-                            if (numberOrOperatorBeforeUndo.isNumber()) {
-                                if (stack.removeLast() != numberOrOperatorBeforeUndo.getValue()) {
-                                    throw new RuntimeException("inconsistent data");
-                                }
-                                inputs.remove(undoIndex);
-                                inputs.remove(beforeUndo);
-                            } else {
-                                inputs.remove(undoIndex);
-                                inputs.remove(beforeUndo);
-                                replay();
-                            }
-                        }
-                    }
-
-            }
-
+            numberOrOperator.calculate(this);
         }
     }
 
     public void replay() {
-        stack = new ArrayDeque<>();
-        for (NumberOrOperator i : inputs) {
-            updateStack(i);
+        this.stack = new ArrayDeque<>();
+        List<NumberOrOperator> toBeReplayed = inputs;
+        inputs = new ArrayList<>();
+        for (NumberOrOperator i : toBeReplayed) {
+            add(i);
         }
     }
 
@@ -141,26 +96,46 @@ public class RPN {
         }
         switch (s) {
             case "+":
-                return new NumberOrOperator(add);
+                return this.add;
             case "-":
-                return new NumberOrOperator(subtract);
+                return this.subtract;
             case "*":
-                return new NumberOrOperator(multiply);
+                return this.multiply;
             case "/":
-                return new NumberOrOperator(divide);
+                return this.divide;
             case "sqrt":
-                return new NumberOrOperator(sqrt);
+                return this.sqrt;
             case "clear":
-                return new NumberOrOperator(clear);
+                return this.clear;
             case "undo":
-                return new NumberOrOperator(undo);
+                return this.undo;
             default:
                 Double n = Double.valueOf(s);
-                return new NumberOrOperator(n);
+                return new Number(n);
         }
     }
 
     public void addString(String s) {
         add(fromString(s));
+    }
+
+    public List<NumberOrOperator> getInputs() {
+        return this.inputs;
+    }
+
+    public void setInputs(List<NumberOrOperator> inputs) {
+        this.inputs = inputs;
+    }
+
+    public void setStack(Deque<Double> stack) {
+        this.stack = stack;
+    }
+
+    public boolean isInsufficientParamters() {
+        return this.insufficientParamters;
+    }
+
+    public void setInsufficientParamters(boolean insufficientParamters) {
+        this.insufficientParamters = insufficientParamters;
     }
 }

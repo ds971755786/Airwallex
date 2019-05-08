@@ -1,29 +1,21 @@
 package io.dongsheng;
 
-public class NumberOrOperator {
-    private Double value;
-    private Operator operator;
-    private boolean isNumber;
+import java.util.Deque;
+import java.util.List;
 
-    public NumberOrOperator(Double value) {
-        this.value = value;
-        this.isNumber = true;
-    }
+public abstract class NumberOrOperator {
 
-    public NumberOrOperator(Operator operator) {
-        this.operator = operator;
-        this.isNumber = false;
-    }
+    public abstract Double getValue();
 
-    public Double getValue() {
-        return value;
-    }
+    public abstract boolean isNumber();
 
-    public Operator getOperator() {
-        return operator;
-    }
+    public abstract void calculate(RPN rpn);
 
-    public boolean isNumber() {
-        return isNumber;
+    public abstract Double binary(Double n1, Double n2);
+
+    public abstract Double unary(Double n);
+
+    public boolean isUndo() {
+        return false;
     }
 }
